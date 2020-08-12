@@ -1,4 +1,4 @@
-version: '2'
+version: "2"
 
 services:
   api:
@@ -8,7 +8,7 @@ services:
       context: ./saleor
       dockerfile: ./Dockerfile
       args:
-        STATIC_URL: '/static/'
+        STATIC_URL: "/static/"
     restart: unless-stopped
     networks:
       - saleor-backend-tier
@@ -28,30 +28,34 @@ services:
       - JAEGER_AGENT_HOST=jaeger
       - STOREFRONT_URL=http://localhost:3000/
       - DASHBOARD_URL=http://localhost:9000/
+      - DEFAULT_COUNTRY=MX
+      - DEFAULT_CURRENCY=MXN
+      - EMAIL_URL=smtp://AKIAV3TU225ZNM5BB3KU:BNBpo4W+iJKtKd3cQfPSd6et4uOQhZ3QkfoIybU4XzvW@email-smtp.us-east-1.amazonaws.com:587/?tls=True
+      - DEFAULT_FROM_EMAIL=erick0gomez98@gmail.com
 
-  storefront:
-    build:
-      context: ./saleor-storefront
-      dockerfile: ./Dockerfile.dev
-    ports:
-      - 3000:3000
-    restart: unless-stopped
-    volumes:
-      - ./saleor-storefront/:/app:cached
-      - /app/node_modules/
-    command: npm start -- --host 0.0.0.0
+  # storefront:
+  #   build:
+  #     context: ./saleor-storefront
+  #     dockerfile: ./Dockerfile.dev
+  #   ports:
+  #     - 3000:3000
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./saleor-storefront/:/app:cached
+  #     - /app/node_modules/
+  #   command: bash -c "sleep 30 && npm start -- --host 0.0.0.0"
 
-  dashboard:
-    build:
-      context: ./saleor-dashboard
-      dockerfile: ./Dockerfile.dev
-    ports:
-      - 9000:9000
-    restart: unless-stopped
-    volumes:
-      - ./saleor-dashboard/:/app:cached
-      - /app/node_modules/
-    command: npm start -- --host 0.0.0.0
+  # dashboard:
+  #   build:
+  #     context: ./saleor-dashboard
+  #     dockerfile: ./Dockerfile.dev
+  #   ports:
+  #     - 9000:9000
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./saleor-dashboard/:/app:cached
+  #     - /app/node_modules/
+  #   command: npm start -- --host 0.0.0.0
 
   db:
     image: library/postgres:11.1-alpine
@@ -61,7 +65,7 @@ services:
     networks:
       - saleor-backend-tier
     volumes:
-      - saleor-db:/var/lib/postgresql
+      - saleor-db:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=saleor
       - POSTGRES_PASSWORD=saleor
@@ -81,7 +85,7 @@ services:
       context: ./saleor
       dockerfile: ./Dockerfile
       args:
-        STATIC_URL: '/static/'
+        STATIC_URL: "/static/"
     command: celery -A saleor worker --app=saleor.celeryconf:app --loglevel=info
     restart: unless-stopped
     networks:
@@ -89,14 +93,15 @@ services:
     env_file: common.env
     depends_on:
       - redis
-      - mailhog
+      # - mailhog
     volumes:
       - ./saleor/saleor/:/app/saleor:Z,cached
       - ./saleor/templates/:/app/templates:Z,cached
       # shared volume between worker and api for media
       - saleor-media:/app/media
     environment:
-      - EMAIL_URL=smtp://mailhog:1025
+      - EMAIL_URL=smtp://AKIAV3TU225ZNM5BB3KU:BNBpo4W+iJKtKd3cQfPSd6et4uOQhZ3QkfoIybU4XzvW@email-smtp.us-east-1.amazonaws.com:587/?tls=True
+      - DEFAULT_FROM_EMAIL=erick0gomez98@gmail.com
 
   jaeger:
     image: jaegertracing/all-in-one
@@ -112,14 +117,14 @@ services:
     networks:
       - saleor-backend-tier
 
-  mailhog:
-    image: mailhog/mailhog
-    ports: 
-      - 1025:1025 # smtp server
-      - 8025:8025 # web ui. Visit http://localhost:8025/ to check emails
-    restart: unless-stopped
-    networks:
-      - saleor-backend-tier
+  # mailhog:
+  #   image: mailhog/mailhog
+  #   ports:
+  #     - 1025:1025 # smtp server
+  #     - 8025:8025 # web ui. Visit http://localhost:8025/ to check emails
+  #   restart: unless-stopped
+  #   networks:
+  #     - saleor-backend-tier
 
 volumes:
   saleor-db:
